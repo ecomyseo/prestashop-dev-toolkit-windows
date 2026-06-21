@@ -45,7 +45,13 @@ param(
     [switch]   $SkipPython,
 
     # No instalar herramientas globales de Node (npm).
-    [switch]   $SkipNode
+    [switch]   $SkipNode,
+
+    # No instalar los skills de PrestaShop en Claude/Antigravity.
+    [switch]   $SkipSkills,
+
+    # Repositorio Git con los skills de PrestaShop.
+    [string]   $SkillsRepo        = 'https://github.com/ecomyseo/prestashop_skills'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -342,15 +348,81 @@ if ($DownloadPrestaShop) {
 }
 
 # ---------------------------------------------------------------------------
+#  8. Skills de PrestaShop para Claude / Antigravity
+# ---------------------------------------------------------------------------
+if (-not $SkipSkills) {
+    Write-Step "Instalando skills de PrestaShop ($SkillsRepo)"
+
+    $skillsSrc = Join-Path $InstallRoot 'prestashop_skills'
+    $gotSkills = $false
+
+    # 1) Intentar clonar/actualizar con git.
+    if (Test-Cmd git) {
+        try {
+            if (Test-Path (Join-Path $skillsSrc '.git')) {
+                git -C $skillsSrc pull --quiet 2>&1 | Out-Null
+            } else {
+                git clone --depth 1 "$SkillsRepo.git" $skillsSrc --quiet 2>&1 | Out-Null
+            }
+            $gotSkills = Test-Path $skillsSrc
+            if ($gotSkills) { Write-Ok "Repo de skills clonado/actualizado en $skillsSrc" }
+        } catch { Write-Warn2 "git fallo ($($_.Exception.Message)); probando descarga ZIP" }
+    }
+
+    # 2) Fallback: descargar el ZIP de la rama main.
+    if (-not $gotSkills) {
+        try {
+            $zip = Join-Path $env:TEMP 'prestashop_skills.zip'
+            Get-File -Url "$SkillsRepo/archive/refs/heads/main.zip" -Out $zip
+            $tmp = Join-Path $env:TEMP 'ps_skills_x'
+            if (Test-Path $tmp) { Remove-Item $tmp -Recurse -Force }
+            Expand-Archive -Path $zip -DestinationPath $tmp -Force
+            $inner = Get-ChildItem $tmp -Directory | Select-Object -First 1
+            if (Test-Path $skillsSrc) { Remove-Item $skillsSrc -Recurse -Force }
+            Move-Item $inner.FullName $skillsSrc
+            Remove-Item $zip, $tmp -Recurse -Force -ErrorAction SilentlyContinue
+            $gotSkills = $true
+            Write-Ok "Skills descargados (ZIP) en $skillsSrc"
+        } catch { Write-Err2 "No se pudieron obtener los skills: $($_.Exception.Message)" }
+    }
+
+    if ($gotSkills) {
+        # Carpetas de skill = subdirectorios con SKILL.md.
+        $skillDirs = Get-ChildItem $skillsSrc -Directory |
+            Where-Object { Test-Path (Join-Path $_.FullName 'SKILL.md') }
+
+        # Destinos: Claude Code y Antigravity (se crean si no existen).
+        $targets = @(
+            (Join-Path $env:USERPROFILE '.claude\skills'),
+            (Join-Path $env:USERPROFILE '.gemini\antigravity\global_skills')
+        )
+
+        foreach ($t in $targets) {
+            New-Item -ItemType Directory -Force -Path $t | Out-Null
+            $n = 0
+            foreach ($s in $skillDirs) {
+                $d = Join-Path $t $s.Name
+                Copy-Item $s.FullName $d -Recurse -Force
+                $n++
+            }
+            Write-Ok "$n skills -> $t"
+        }
+    }
+} else {
+    Write-Skip "Skills de PrestaShop omitidos"
+}
+
+# ---------------------------------------------------------------------------
 #  Resumen
 # ---------------------------------------------------------------------------
 Write-Step "Instalacion finalizada"
 Write-Host @"
-  Reinicia la terminal (o VS Code/Antigravity) para refrescar el PATH.
+  NO hace falta reiniciar el equipo. Abre una terminal NUEVA (o reinicia
+  VS Code/Antigravity) para que el PATH se refresque.
 
   Comprobaciones rapidas:
     php -v
-    php74 -v   php81 -v   php82 -v   php83 -v
+    php74 -v   php81 -v   php82 -v   php83 -v   php84 -v
     composer --version
     phpcs --version
     phpstan --version

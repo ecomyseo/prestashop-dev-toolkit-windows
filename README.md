@@ -22,6 +22,7 @@ extensiones de VS Code y, opcionalmente, copias de PrestaShop para pruebas de co
 | **Frontend** | ESLint, JSHint, Prettier (+plugin PHP), Stylelint |
 | **Python** | Ruff, Black, Pylint, Flake8, mypy, Bandit |
 | **VS Code** | Intelephense, PHP Debug, phpsab, Smarty, Twig, ESLint, Prettier, Ruff, YAML, SQLTools… |
+| **Skills PrestaShop** | 29 skills de [`ecomyseo/prestashop_skills`](https://github.com/ecomyseo/prestashop_skills) → Claude (`~/.claude/skills`) y Antigravity (`~/.gemini/antigravity/global_skills`) |
 | **PrestaShop (opcional)** | 1.6.1.24, 1.7.8.11, 8.1.7, 8.2.7, 9.1.1 |
 
 > Lista detallada con la función de cada herramienta en **[HERRAMIENTAS.md](HERRAMIENTAS.md)**.
@@ -52,6 +53,8 @@ El script es **idempotente**: comprueba antes de instalar y puede re-ejecutarse 
 | `-SkipVSCode` | *(off)* | No instala extensiones de VS Code |
 | `-SkipPython` | *(off)* | No instala herramientas de Python |
 | `-SkipNode` | *(off)* | No instala herramientas de Node |
+| `-SkipSkills` | *(off)* | No instala los skills de PrestaShop |
+| `-SkillsRepo` | `ecomyseo/prestashop_skills` | Repo Git de los skills |
 
 ---
 
