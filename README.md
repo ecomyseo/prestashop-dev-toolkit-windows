@@ -1,3 +1,17 @@
+# PrestaShop Dev Toolkit for Windows
+
+**One PowerShell script that sets up Windows for PHP/PrestaShop work: PHP 7.4–8.4 side by side, Composer, PHPCS with the PrestaShop standard, PHPStan, Rector, linters. Ready for AI agents.**
+
+- PHP 7.4 to 8.4 side by side
+- PHPCS + PrestaShop standard, PHPStan, Rector
+- Idempotent, one script
+
+> 🇪🇸 Documentación completa en castellano más abajo · Full docs below (Spanish).
+
+⭐ If this saves you time, a star helps other people find it.
+
+---
+
 # PrestaShop Dev Toolkit · Windows
 
 Instalador en **PowerShell** que deja un equipo Windows listo para **programar, revisar,
